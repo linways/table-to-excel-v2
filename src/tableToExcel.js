@@ -16,6 +16,7 @@ const TableToExcel = (function(Parser) {
   };
 
   methods.save = function(wb, fileName) {
+    console.log("Hello table to excel v2")
     wb.xlsx.writeBuffer().then(function(buffer) {
       saveAs(
         new Blob([buffer], { type: "application/octet-stream" }),
