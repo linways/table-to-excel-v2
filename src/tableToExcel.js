@@ -16,10 +16,27 @@ const TableToExcel = (function(Parser) {
   };
 
   methods.save = function(wb, fileName) {
-    console.log("Hello table to excel v2")
     wb.xlsx.writeBuffer().then(function(buffer) {
+      const blob = new Blob([buffer], { type: "application/octet-stream" });
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = function() {
+        const base64data = reader.result;
+        // FOR FILE CREATION IN MOBILE APP.
+        let data = {
+          isFileOpenFromBase64Request: true,
+          isMetaDataIncluded: true,
+          fileName: fileName,
+          base64Data: base64data
+        }
+        data = JSON.stringify(data);
+        if (window.CustomWebviewMessageChannel) {
+          window.CustomWebviewMessageChannel.postMessage(data);
+        }
+      };
+      
       saveAs(
-        new Blob([buffer], { type: "application/octet-stream" }),
+        blob,
         fileName
       );
     });
