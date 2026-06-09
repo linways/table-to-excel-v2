@@ -55,6 +55,18 @@ const TTEParser = (function() {
           });
         }
         c += cs;
+        // Collect image data for later embedding via ExcelJS
+        let imgEl = td.querySelector('img');
+        if (imgEl) {
+          if (!ws._images) ws._images = [];
+          ws._images.push({
+            src: imgEl.src || imgEl.getAttribute('src') || '',
+            col: c - cs - 1,
+            row: r - 1,
+            width: parseInt(td.getAttribute('data-img-width')) || imgEl.naturalWidth || parseInt(imgEl.getAttribute('width')) || 100,
+            height: parseInt(td.getAttribute('data-img-height')) || imgEl.naturalHeight || parseInt(imgEl.getAttribute('height')) || 50
+          });
+        }
         exCell.value = getValue(td);
         if (!opts.autoStyle) {
           let styles = getStylesDataAttr(td);
