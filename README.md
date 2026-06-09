@@ -160,6 +160,30 @@ Example:
 </tr>
 ```
 
+# Images
+
+Any `<img>` placed inside a cell (`<td>`/`<th>`) is embedded into the exported
+sheet as a floating image anchored to the top-left of that cell. This works for
+logos, college headers/banners, signatures, seals, student photos, QR codes,
+etc. No extra markup is required — just keep the `<img>` in the cell.
+
+```html
+<td colspan="6">
+  <img src="https://your-domain/college-logo.png" style="width: 85px; height: 115px;">
+  <div>College Name</div>
+</td>
+```
+
+Notes:
+
+- The image is read from the **already-rendered, loaded** `<img>` in the DOM via
+  a `<canvas>`, so the report must be visible/rendered before exporting.
+- Because a `<canvas>` is used, the image must be **same-origin** or served with
+  CORS headers (`Access-Control-Allow-Origin`); otherwise the canvas is tainted
+  and that single image is skipped (the rest of the export still succeeds).
+- The display size comes from the `<img>` rendered/declared `width`/`height`.
+- Any cell text alongside the image is still exported as the cell value.
+
 # Release Changelog
 
 ## 1.0.0

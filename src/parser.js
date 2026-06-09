@@ -3,10 +3,11 @@ const TTEParser = (function() {
 
   /**
    * Parse HTML table to excel worksheet
+   * @param {object} wb The workbook object (needed to embed cell images)
    * @param {object} ws The worksheet object
    * @param {HTML entity} table The table to be converted to excel sheet
    */
-  methods.parseDomToTable = function(ws, table, opts) {
+  methods.parseDomToTable = function(wb, ws, table, opts) {
     let _r, _c, cs, rs, r, c;
     let rows = [...table.getElementsByTagName("tr")];
     let widths = table.getAttribute("data-cols-width");
@@ -54,8 +55,12 @@ const TTEParser = (function() {
             e: { c: c + cs - 1, r: r + rs - 1 }
           });
         }
+        let startCol = c;
         c += cs;
         exCell.value = getValue(td);
+        // Embed any <img> inside the cell (logos, college header, signs, seals,
+        // student photos, QR codes) as floating images anchored to this cell.
+        addCellImages(wb, ws, td, startCol, r);
         if (!opts.autoStyle) {
           let styles = getStylesDataAttr(td);
           exCell.font = styles.font || null;
@@ -137,6 +142,58 @@ const TTEParser = (function() {
 
   let getColumnAddress = function(col, row) {
     return getExcelColumnName(col) + row;
+  };
+
+  /**
+   * Finds every <img> inside a cell and embeds it into the worksheet as a
+   * floating image anchored to the top-left of the cell. Images are read from
+   * the already-rendered (loaded) DOM <img> via a canvas, so no extra network
+   * request is made. Failures (e.g. an image not yet loaded) are swallowed so
+   * a single bad image never breaks the whole export.
+   * @param {object} wb The workbook object (needed for addImage)
+   * @param {object} ws The worksheet object
+   * @param {HTML entity} td The cell element
+   * @param {number} col 1-based excel column of the cell's top-left
+   * @param {number} row 1-based excel row of the cell
+   */
+  let addCellImages = function(wb, ws, td, col, row) {
+    if (!wb || typeof document === "undefined") return;
+    let imgs = td.getElementsByTagName("img");
+    for (let i = 0; i < imgs.length; ++i) {
+      try {
+        let img = imgs[i];
+        let dataUrl = getImageDataUrl(img);
+        if (!dataUrl) continue;
+        let imageId = wb.addImage({ base64: dataUrl, extension: "png" });
+        let width = img.width || img.naturalWidth || 100;
+        let height = img.height || img.naturalHeight || 100;
+        ws.addImage(imageId, {
+          tl: { col: col - 1, row: row - 1 },
+          ext: { width: width, height: height },
+          editAs: "oneCell"
+        });
+      } catch (e) {
+        // Skip images that cannot be embedded; keep the rest of the export intact.
+      }
+    }
+  };
+
+  /**
+   * Draws a loaded DOM <img> onto a canvas and returns a PNG data URL.
+   * Returns null when the image is not loaded or has no intrinsic size.
+   * @param {HTML entity} img
+   * @return {string|null}
+   */
+  let getImageDataUrl = function(img) {
+    if (!img.complete) return null;
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    if (!w || !h) return null;
+    let canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/png");
   };
 
   /**

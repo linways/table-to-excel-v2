@@ -7,7 +7,7 @@ describe("Parser", function() {
     it("should convert simple html table to worksheet", function() {
       let table = getTable("simpleTable");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       expect(ws).to.not.be.null;
       expect(ws.getCell("A1").value).to.equals("#");
       expect(ws.getCell("B1").value).to.equals("City");
@@ -17,7 +17,7 @@ describe("Parser", function() {
     it("should successfully handle colspan", function() {
       let table = getTable("colSpan");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       expect(ws.getCell("B2").value).to.equals(ws.getCell("C2").value);
       expect(ws.getCell("C2").master).to.equals(ws.getCell("B2"));
       expect(ws.getCell("A4").value).to.equals(ws.getCell("C4").value);
@@ -27,7 +27,7 @@ describe("Parser", function() {
     it("should successfully handle both colspan and rowspan", function() {
       let table = getTable("colAndRowSpan");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       expect(ws.getCell("B2").value).to.equals(ws.getCell("C2").value);
       expect(ws.getCell("B2").value).to.equals(ws.getCell("B3").value);
       expect(ws.getCell("B2").value).to.equals(ws.getCell("C3").value);
@@ -40,7 +40,7 @@ describe("Parser", function() {
     beforeEach(function() {
       let table = getTable("styles");
       ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
     });
     describe("Font attributes", function() {
       it("should handle font name properly", function() {
@@ -143,7 +143,7 @@ describe("Parser", function() {
     beforeEach(function() {
       let table = getTable("styles");
       ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
     });
     it("should handle number", function() {
       expect(ws.getCell("A4").value).to.be.a("number");
@@ -180,14 +180,14 @@ describe("Parser", function() {
     it("should handle exclude row", function() {
       let table = getTable("styles");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       let actualsRows = [...table.getElementsByTagName("tr")];
       expect(ws.rowCount).to.equals(actualsRows.length - 1);
     });
     it("should handle exclude cell", function() {
       let table = getTable("styles");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       let actualsRows = [...table.getElementsByTagName("tr")];
       let actualCells = [...actualsRows[12].children];
       expect(ws.getRow(12).cellCount).to.equals(actualCells.length - 1);
@@ -197,7 +197,7 @@ describe("Parser", function() {
     it("Should handle the col widths", function() {
       let table = getTable("styles");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       expect(ws.columns[0].width).to.equals(70);
     });
   });
@@ -206,7 +206,7 @@ describe("Parser", function() {
     it("Should handle the row height", function() {
       let table = getTable("styles");
       let ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       expect(ws.getRow(13).height).to.equals(45);
     });
   });
@@ -216,7 +216,7 @@ describe("Parser", function() {
     it("should handle multiple merges properly", function() {
       let table = getTable("multipleMerges");
       ws = getWorkSheet();
-      ws = Parser.parseDomToTable(ws, table, _opts);
+      ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts);
       expect(ws.getCell("A1").value).to.equals(ws.getCell("F1").value);
       expect(ws.getCell("A2").value).to.equals(ws.getCell("B2").value);
       expect(ws.getCell("C2").value).to.equals(ws.getCell("D2").value);
@@ -227,6 +227,22 @@ describe("Parser", function() {
       expect(ws.getCell("A5").value).to.equals(ws.getCell("A6").value);
       expect(ws.getCell("B5").value).to.equals("B");
       expect(ws.getCell("B6").value).to.equals("Y");
+    });
+  });
+
+  describe("Images", function() {
+    // The actual canvas->base64 embedding only runs in a real browser. Here we
+    // verify the image path degrades gracefully (unloaded image is skipped) and
+    // never breaks the rest of the export.
+    it("should not throw on cells containing an <img> and still export text", function() {
+      let table = getTable("imageCell");
+      let ws = getWorkSheet();
+      let parse = () =>
+        (ws = Parser.parseDomToTable(ws.workbook, ws, table, _opts));
+      expect(parse).to.not.throw();
+      expect(ws.getCell("A1").value.trim()).to.equals("College Name");
+      expect(ws.getCell("A2").value).to.equals("Reg No");
+      expect(ws.getCell("B2").value).to.equals("Name");
     });
   });
 });
