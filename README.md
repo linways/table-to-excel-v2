@@ -160,6 +160,8 @@ Example:
 </tr>
 ```
 
+> Fork of archieve table to excel: https://github.com/linways/table-to-excel
+
 # Release Changelog
 
 ## 1.0.0
