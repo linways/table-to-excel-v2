@@ -1,8 +1,27 @@
 {
   "name": "@linways/table-to-excel",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "description": "Javascript library to create 'valid' excel file from html table with styles",
-  "main": "./dist/tableToExcel.js",
+  "type": "module",
+  "main": "./dist/tableToExcel.cjs",
+  "module": "./dist/tableToExcel.js",
+  "browser": "./dist/tableToExcel.js",
+  "exports": {
+    ".": {
+      "import": "./dist/tableToExcel.js",
+      "require": "./dist/tableToExcel.cjs",
+      "default": "./dist/tableToExcel.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/tableToExcel.js",
+    "./dist/tableToExcel.cjs"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/linways/table-to-excel"
@@ -19,36 +38,23 @@
     "html to xlsx"
   ],
   "scripts": {
-    "dev": "parcel sample/index.html",
-    "build": "parcel build src/tableToExcel.js",
-    "build-tree-shake": "parcel build src/tableToExcel.js --experimental-scope-hoisting",
-    "test": "mocha -r @babel/register -r @babel/polyfill -r jsdom-global/register",
-    "test-watch": "mocha -r @babel/register -r @babel/polyfill -r jsdom-global/register  --watch --recursive"
+    "build": "tsup src/tableToExcel.js --format esm,cjs --clean --sourcemap",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "author": "Rohith Bhaskaran",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.4",
-    "@babel/node": "^7.2.2",
-    "@babel/polyfill": "^7.4.4",
-    "@babel/preset-env": "^7.4.4",
-    "@babel/register": "^7.4.4",
     "chai": "^4.2.0",
     "eslint": "^7.32.0",
-    "jsdom": "13.0.0",
-    "jsdom-global": "3.0.2",
-    "mocha": "^5.2.0",
-    "parcel-bundler": "^1.12.3"
+    "jsdom": "^25.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^2.0.0"
   },
   "dependencies": {
-    "exceljs": "^1.10.0",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.1",
     "jszip": "^3.2.1"
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
-    ]
   }
 }
